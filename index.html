@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>에타 배경화면 만들기</title>
+    <style>
+        body{
+            background-color: #0a0a0a;
+            color: #e8e8e8;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        button {
+            background-color: #c8ff00;
+            color: #0a0a0a;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Noto Sans KR', sans-serif;
+            cursor: pointer;
+        }
+        .container{
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .container > div{
+            margin-bottom: 20px;
+        }
+        select {
+            background-color: #141414;
+            color: #e8e8e8;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        input[type="number"] {
+            background-color: #141414;
+            color: #e8e8e8;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 8px;
+            width: 45%;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        canvas {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        #upload {
+            background-color: #141414;
+            border: 2px dashed #333;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            color: #888;
+            user-select: none;
+        }
+
+        #customSize {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        
+    </style>
+
+    
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h1>에브리타임 시간표 배경화면 만들기</h1>
+            <p>에브리타임 시간표를 배경화면으로 변환해드려요</p>
+        </div>
+        <div>
+            <div id="upload">클릭하여 시간표 업로드</div>
+            <input type="file" id="fileInput" style="display:none">
+        </div>
+        <div>
+            <select id="modeSelect">
+                <option value="dark">다크모드</option>
+                <option value="light">라이트모드</option>
+            </select>
+        </div>
+        <div>
+            <select id="positionSelect">
+                <option value="top">상단</option>
+                <option value="center" selected>중앙</option>
+                <option value="bottom">하단</option>
+            </select>
+        </div>
+        <div> 
+            <select id="deviceSelect">
+            <option value="1206x2622">iPhone 16 Pro</option>
+            <option value="1320x2868">iPhone 16 Pro Max</option>
+            <option value="1179x2556">iPhone 15 / 16</option>
+            <option value="1179x2556">iPhone 14 Pro</option>
+            <option value="1290x2796">iPhone 14 Pro Max</option>
+            <option value="1170x2532">iPhone 13 / 14</option>
+            <option value="750x1334">iPhone SE</option>
+            <option value="1080x2340">Galaxy S25 / S24</option>
+            <option value="1440x3120">Galaxy S25 Ultra</option>
+            <option value="1440x3088">Galaxy S24 Ultra</option>
+            <option value="1080x2400">Galaxy A시리즈</option>
+            <option value="custom">직접 입력</option>
+        </select>
+        </div>
+        <div id="customSize" style="display:none">
+            <input type="number" id="customWidth" placeholder="가로">
+            <span>X</span>
+            <input type="number" id="customHeight" placeholder="세로">
+        </div>
+        <div>
+            <input type="range" id="sizeRange" min="30" max="100" value="100">
+            <span id ="sizeValue">100%</span>
+        </div>
+        <div>
+            <button id="generateBtn">생성하기</button>
+        </div>
+        <div>
+            <button id="downloadBtn">다운로드</button>
+        </div>
+        <div>
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+    
+
+    <script>
+        const downloadBtn = document.getElementById("downloadBtn");
+        const generateBtn = document.getElementById("generateBtn");
+        const fileInput = document.getElementById("fileInput");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const deviceSelect = document.getElementById("deviceSelect");
+        const modeSelect = document.getElementById("modeSelect");
+        const sizeRange = document.getElementById("sizeRange");
+        const sizeValue = document.getElementById("sizeValue");
+        const positionSelect = document.getElementById("positionSelect");
+        const upload = document.getElementById("upload");
+        const customSize = document.getElementById("customSize");
+
+        let uploadedImage = null;
+
+        function render(){
+            const deviceSize = deviceSelect.value.split("x");
+            let deviceWidth, deviceHeight;
+            const backgroundMode = modeSelect.value;
+            const position = positionSelect.value;
+            let backgroundColor, y;
+            if(backgroundMode==="dark"){
+                backgroundColor = "#111111";
+            }else{
+                backgroundColor = "#ffffff";
+            }
+            
+            if(deviceSelect.value==="custom"){
+                const customWidth = document.getElementById("customWidth");
+                const customHeight = document.getElementById("customHeight");
+                deviceWidth = parseInt(customWidth.value);
+                deviceHeight = parseInt(customHeight.value);
+            }else{
+                deviceWidth = parseInt(deviceSize[0]);
+                deviceHeight = parseInt(deviceSize[1]);
+            }
+            canvas.width=deviceWidth;
+            canvas.height=deviceHeight;
+            const ratio = uploadedImage.width/uploadedImage.height;
+            const drawWidth = canvas.width * (sizeRange.value/100);
+            const drawHeight = drawWidth/ratio;
+            const x = (canvas.width - drawWidth)/2;
+            
+            if(position==="top"){
+                y = canvas.height*0.1;
+            }else if(position==="center"){
+                y = (canvas.height - drawHeight)/2;
+            }else{
+                y = canvas.height - drawHeight - (canvas.height*0.1);
+            }
+
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, deviceWidth, deviceHeight);
+            ctx.drawImage(uploadedImage, x, y, drawWidth, drawHeight);
+        };
+
+        function readFile(file){
+            const reader = new FileReader();
+            reader.onload = function(){
+                const img = new Image();
+                img.onload = function(){
+                    uploadedImage=img;
+                }
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+            upload.textContent=file.name;
+        }
+
+        upload.addEventListener("dragover", function(e){
+            e.preventDefault();
+        });
+
+        upload.addEventListener("drop", function(e){
+            e.preventDefault();
+            readFile(e.dataTransfer.files[0]);
+        });
+
+        upload.addEventListener("click", function(e){
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function(e){
+            readFile(e.target.files[0]);
+        });
+
+        downloadBtn.addEventListener("click", function(){
+            const link = document.createElement("a");
+            link.download = "background.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+        
+        generateBtn.addEventListener("click", function(){
+            if(!uploadedImage){
+                return;
+            }
+            render();
+        });
+
+        sizeRange.addEventListener("input", function(){
+            sizeValue.textContent = sizeRange.value + "%";
+        });
+
+        deviceSelect.addEventListener("change", function(e){
+            if(e.target.value==="custom"){
+                customSize.style.display="flex";
+            }else{
+                customSize.style.display="none";
+            }
+        })
+
+    </script>
+</body>
+</html>
