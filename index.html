@@ -49,7 +49,9 @@
             border: 1px solid #333;
             padding: 10px;
             border-radius: 8px;
-            width: 45%;
+            width: 0;
+            flex: 1;
+            min-width: 60px;
             font-family: 'Noto Sans KR', sans-serif;
         }
 
@@ -61,13 +63,15 @@
         canvas {
             max-width: 100%;
             border-radius: 8px;
+            display: block;
+            height: auto;
         }
 
         #upload {
             background-color: #141414;
             border: 2px dashed #333;
             border-radius: 8px;
-            padding: 40px;
+            padding: clamp(20px, 5vw, 40px);
             text-align: center;
             cursor: pointer;
             color: #888;
@@ -85,6 +89,7 @@
 
     
 </head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <body>
     <div class="container">
         <div>
